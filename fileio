@@ -1,0 +1,37 @@
+#!/bin/sh
+FILE=$1
+EXPIRY=$2
+
+prereq () {
+	if ! type "jq" > /dev/null; then
+		echo "jq not found, please install jq"
+		exit 0
+	fi
+}
+
+checkargs () {
+	if [ -z "$FILE" ]; then
+		echo "No input file."
+		exit 0
+	fi
+	if [ -z "$EXPIRY" ]; then
+		echo "No expiry set, using default of 2w"
+		EXPIRY=2w
+	fi
+}
+
+upload () {
+	DATA=$(curl -s -F "file=@$FILE" https://file.io/?expires=$TIME)
+	STATUS=$(echo $DATA | jq -r '.success')
+	LINK=$(echo $DATA | jq -r '.link')
+	EXPIRY=$(echo $DATA | jq -r '.expiry')
+
+	if [ "$STATUS" = "true" ]; then
+		echo $LINK
+		exit 0
+	else
+    	echo "Failed to upload."
+		exit 0
+	fi
+}
+exit 0
